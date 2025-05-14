@@ -3,9 +3,11 @@ package com.ach.stock.controller;
 
 import com.ach.stock.dto.StockTrade;
 import com.ach.stock.dto.Trade;
+import com.ach.stock.dto.UserWallet;
 import com.ach.stock.dto.Users;
 import com.ach.stock.service.TradeService;
 import com.ach.stock.service.UserService;
+import com.ach.stock.service.UserWalletService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ public class TradeController {
 
     private final TradeService tradeService;
     private final UserService userService;
+    private final UserWalletService userWalletService;
 
     // 매도/매수 페이지 호출
     @GetMapping("/trades/center")
@@ -51,9 +54,9 @@ public class TradeController {
     @Transactional
     public ResponseEntity<String> registerTrade(@RequestBody StockTrade trade, @SessionAttribute(name = "loginUser") Users loginUser) {
         // 거래로 인한 사용자의 금액 변경
+        userWalletService.updateBalance(loginUser, trade);
 
         // 거래내역 저장
-//        tradeService.registerTrade(trade, loginUser);
         tradeService.registerTrade(trade, loginUser);
 
         return ResponseEntity.ok("Trade Successfully Registered");

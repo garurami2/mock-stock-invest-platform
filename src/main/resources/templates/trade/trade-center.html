@@ -43,17 +43,11 @@
         <input type="text" id="stockName" name="stockName" required readonly>
 
         <label for="category">카테고리</label>
-        <select id="category" name="category" required>
-          <option value="">카테고리 선택</option>
-          <option value="IT">IT</option>
-          <option value="금융">금융</option>
-          <option value="제조">제조</option>
-          <option value="헬스케어">헬스케어</option>
-          <option value="기타">기타</option>
-        </select>
+        <input type="text" id="category" name="categoryName" required readonly>
+        <input type="hidden" id="categoryId" name="categoryId">
 
         <label for="price">가격</label>
-        <input type="number" id="price" name="price" required>
+        <input type="number" id="price" name="price" required readonly>
 
         <label for="quantity">수량</label>
         <input type="number" id="quantity" name="quantity" required>
@@ -81,7 +75,7 @@
       stocks.forEach(stock => {
 
         const row = `
-                    <tr data-code="${stock.stockCode}" data-name="${stock.stockName}" data-price="${stock.currentPrice}">
+                    <tr data-code="${stock.stockCode}" data-name="${stock.stockName}" data-price="${stock.currentPrice}" data-category-name="${stock['category']?.categoryName}" data-category-id="${stock['category']?.categoryId}">
                         <td>${stock.stockCode}</td>
                         <td>${stock.stockName}</td>
                         <td>${stock["category"]?.categoryName}</td>
@@ -94,31 +88,18 @@
         const code = $(this).data("code");
         const name = $(this).data("name");
         const price = $(this).data("price");
+        const categoryName = $(this).data("categoryName");
+        const categoryId = $(this).data("categoryId");
+
 
         $("#stockCode").val(code);
         $("#stockName").val(name);
         $("#price").val(price);
+        $("#category").val(categoryName);
+        $("#categoryId").val(categoryId);
         fetchHoldingQuantity(code);
         updateTotalPrice();
       });
-    });
-  }
-
-  // 카테고리 목록 불러오기
-  function fetchCategory(){
-    $.get("/api/categories/all", function(categories){
-      const $categorySelect = $('#category');
-
-      console.log("!!!!");
-
-      categories.forEach(category => {
-        $categorySelect.append(
-                $('<option>', {
-                  value: category.categoryId,
-                  text: category.categoryName
-                })
-        )
-      })
     });
   }
 
@@ -154,6 +135,7 @@
       stockCode: $("#stockCode").val(),
       stockName: $("#stockName").val(),
       price: parseInt($("#price").val()),
+      categoryId:$("#categoryId").val(),
       quantity: qty,
       tradeType: tradeType
     };
@@ -178,7 +160,6 @@
 
   $(document).ready(function () {
     fetchStockData();
-    fetchCategory();
     setInterval(fetchStockData, 5000);
     $("#price, #quantity").on("input", updateTotalPrice);
   });

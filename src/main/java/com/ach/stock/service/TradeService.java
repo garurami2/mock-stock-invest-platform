@@ -22,25 +22,6 @@ public class TradeService {
 
     private final CategoryRepository categoryRepository;
 
-    // 거래 등록
-    /*@Transactional
-    public void registerTrade(Trade dto, Users user) {
-        Users persistentUser = userRepository.findByUserId(user.getUserId())
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
-
-        Trade trade = Trade.builder()
-                .stockCode(dto.getStockCode())
-                .stockName(dto.getStockName())
-                .price(dto.getPrice())
-                .quantity(dto.getQuantity())
-                .tradeType(TradeType.valueOf(dto.getTradeType().toString().toUpperCase()))
-                .user(persistentUser) // 영속된 객체로 설정
-                .tradedAt(new Date())
-                .build();
-
-        tradeRepository.save(trade);
-    }*/
-
     @Transactional
     public void registerTrade(StockTrade dto, Users user) {
         Users persistentUser = userRepository.findByUserId(user.getUserId())
