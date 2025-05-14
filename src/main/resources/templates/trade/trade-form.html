@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>매수/매도 + 실시간 종목</title>
+  <link rel="stylesheet" th:href="@{/css/trade-form.css}">
+</head>
+<body>
+<div class="container">
+  <h1>📊 실시간 시세 & 거래 등록</h1>
+  <div class="grid-layout">
+    <!-- 종목 리스트 -->
+    <div class="stock-section">
+      <h2>📡 종목 목록</h2>
+      <table id="stockTable">
+        <thead>
+        <tr>
+          <th>종목 코드</th>
+          <th>종목 이름</th>
+          <th>현재가</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- JS 렌더링 -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 거래 폼 -->
+    <div class="form-section">
+      <h2>📝 매수 / 매도 등록</h2>
+      <form id="tradeForm">
+        <label for="stockCode">종목 코드</label>
+        <input type="text" id="stockCode" name="stockCode" required readonly>
+
+        <label for="stockName">종목 이름</label>
+        <input type="text" id="stockName" name="stockName" required readonly>
+
+        <label for="price">가격</label>
+        <input type="number" id="price" name="price" required>
+
+        <label for="quantity">수량</label>
+        <input type="number" id="quantity" name="quantity" required>
+
+        <label for="tradeType">거래 유형</label>
+        <select id="tradeType" name="tradeType" required>
+          <option value="BUY">매수</option>
+          <option value="SELL">매도</option>
+        </select>
+
+        <button type="submit">거래 등록</button>
+      </form>
+      <div id="totalPriceDisplay">총 거래 금액: - 원</div>
+      <div id="holdingDisplay">보유 수량: - 주</div>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+<script>
+  function fetchStockData() {
+    $.get("/api/stocks", function (stocks) {
+      const tbody = $("#stockTable tbody");
+      tbody.empty();
+
+      stocks.forEach(stock => {
+        const row = `
+                    <tr data-code="${stock.stockCode}" data-name="${stock.stockName}" data-price="${stock.currentPrice}">
+                        <td>${stock.stockCode}</td>
+                        <td>${stock.stockName}</td>
+                        <td>${stock.currentPrice.toLocaleString()}</td>
+                    </tr>
+                `;
+        tbody.append(row);
+      });
+
+      // 행 클릭 시 폼 자동 입력
+      $("#stockTable tbody tr").click(function () {
+        $("#stockCode").val($(this).data("code"));
+        $("#stockName").val($(this).data("name"));
+        $("#price").val($(this).data("price"));
+      });
+    });
+  }
+
+  // 자동 계산
+  function updateTotalPrice() {
+    const price = parseInt($("#price").val()) || 0;
+    const quantity = parseInt($("#quantity").val()) || 0;
+    const total = price * quantity;
+    $("#totalPriceDisplay").text(`총 거래 금액: ${total.toLocaleString()} 원`);
+  }
+
+  // 보유 수량 조회
+  function fetchHoldingQuantity(stockCode) {
+    $.get(`/api/trade/holding/${stockCode}`, function (quantity) {
+      $("#holdingDisplay").text(`보유 수량: ${quantity.toLocaleString()} 주`);
+      $("#holdingDisplay").data("quantity", quantity); // for validation
+    });
+  }
+
+  // 이벤트 바인딩
+  $("#price, #quantity").on("input", updateTotalPrice);
+
+  // 종목 클릭 → 자동 입력 + 보유 수량 조회
+  $("#stockTable tbody").on("click", "tr", function () {
+    const code = $(this).data("code");
+    $("#stockCode").val(code);
+    $("#stockName").val($(this).data("name"));
+    $("#price").val($(this).data("price"));
+    updateTotalPrice();
+    fetchHoldingQuantity(code);
+  });
+
+  $(document).ready(function () {
+    fetchStockData();
+    setInterval(fetchStockData, 5000);
+
+    $("#tradeForm").on("submit", function (e) {
+      const tradeType = $("#tradeType").val();
+      const quantity = parseInt($("#quantity").val());
+      const holding = $("#holdingDisplay").data("quantity") || 0;
+
+      if (tradeType === "SELL" && quantity > holding) {
+        alert(`보유 수량(${holding})보다 많은 수량을 매도할 수 없습니다.`);
+        e.preventDefault();
+        return;
+      }
+
+      e.preventDefault();
+
+      const data = {
+        stockCode: $("#stockCode").val(),
+        stockName: $("#stockName").val(),
+        price: parseInt($("#price").val()),
+        quantity: parseInt($("#quantity").val()),
+        tradeType: $("#tradeType").val()
+      };
+
+      $.ajax({
+        url: "/api/trade",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function () {
+          alert("거래가 등록되었습니다.");
+          $("#tradeForm")[0].reset();
+        },
+        error: function () {
+          alert("거래 등록 실패!");
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>

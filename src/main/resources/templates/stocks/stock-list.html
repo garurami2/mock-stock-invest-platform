@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>종목 리스트</title>
+  <link rel="stylesheet" th:href="@{/css/stock-list.css}">
+  <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+  <script>
+    $(document).ready(function () {
+      $(".sortable").each(function (columnIndex) {
+        $(this).css("cursor", "pointer").click(function () {
+          let table = $(this).closest("table");
+          let rows = table.find("tbody > tr").toArray();
+          let isAsc = $(this).data("asc") || false;
+
+          // 정렬 실행
+          rows.sort(function (a, b) {
+            let A = $(a).children("td").eq(columnIndex).text().trim();
+            let B = $(b).children("td").eq(columnIndex).text().trim();
+
+            if ($.isNumeric(A) && $.isNumeric(B)) {
+              A = parseFloat(A);
+              B = parseFloat(B);
+            }
+
+            return isAsc ? (A > B ? -1 : A < B ? 1 : 0) : (A < B ? -1 : A > B ? 1 : 0);
+          });
+
+          // 정렬 반영
+          $.each(rows, function (i, row) {
+            table.children("tbody").append(row);
+          });
+
+          // 기존 아이콘 초기화
+          $(".sortable .sort-icon").text("");
+
+          // 현재 클릭된 곳만 아이콘 표시
+          $(this).find(".sort-icon").text(isAsc ? "▼" : "▲");
+
+          // 정렬 방향 반전 저장
+          $(this).data("asc", !isAsc);
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+<div class="container">
+  <h1>📋 종목 리스트</h1>
+
+  <div class="button-area">
+    <a th:href="@{/main}" class="btn-main">🏠 메인 페이지</a>
+    <a th:href="@{/admin/stocks/register}" class="btn-register">➕ 종목 등록</a>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th class="sortable">ID<span class="sort-icon"></span></th>
+      <th class="sortable">종목 코드<span class="sort-icon"></span></th>
+      <th class="sortable">종목 이름<span class="sort-icon"></span></th>
+      <th class="sortable">카테고리<span class="sort-icon"></span></th>
+      <th class="sortable">현재가<span class="sort-icon"></span></th>
+      <th class="sortable">등록일<span class="sort-icon"></span></th>
+      <th class="sortable">갱신일<span class="sort-icon"></span></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="stock : ${stocksList}">
+      <td th:text="${stock.id}"></td>
+      <td th:text="${stock.stockCode}"></td>
+      <td th:text="${stock.stockName}"></td>
+      <td th:text="${stock.category?.categoryName}"></td>
+      <td th:text="${stock.currentPrice}"></td>
+      <td th:text="${#dates.format(stock.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+      <td th:text="${#dates.format(stock.lastUpdate, 'yyyy-MM-dd HH:mm')}"></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

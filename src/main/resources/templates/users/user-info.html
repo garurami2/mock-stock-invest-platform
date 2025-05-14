@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>내 정보</title>
+  <link rel="stylesheet" th:href="@{/css/user-info.css}" />
+</head>
+<body>
+<div class="container">
+  <h2>내 정보</h2>
+  <div class="info-group">
+    <span class="info-label">이메일:</span>
+    <span class="info-value" th:text="${userInfo.user.email}">email@example.com</span>
+  </div>
+  <div class="info-group">
+    <span class="info-label">닉네임:</span>
+    <span class="info-value" th:text="${userInfo.user.nickName}">홍길동</span>
+  </div>
+  <div class="info-group">
+    <span class="info-label">역할:</span>
+    <span class="info-value" th:text="${userInfo.user.role}">USER</span>
+  </div>
+  <div class="info-group">
+    <span class="info-label">가입일:</span>
+    <span class="info-value" th:text="${#dates.format(userInfo.user.createdAt, 'yyyy-MM-dd HH:mm')}">2025-05-10</span>
+  </div>
+  <hr/>
+  <div class="info-group">
+    <span class="info-label">현재 잔액:</span>
+    <span class="info-value" th:text="${userInfo.balance}">1000000</span> 원
+  </div>
+  <div class="info-group">
+    <span class="info-label">최종 갱신일:</span>
+    <span class="info-value" th:text="${formattedUpdatedAt}"></span>
+  </div>
+
+  <div class="button-group">
+    <a href="/main" class="btn">메인으로</a>
+    <a href="/logout" class="btn" style="background-color: #e74c3c;">로그아웃</a>
+  </div>
+</div>
+</body>
+</html>

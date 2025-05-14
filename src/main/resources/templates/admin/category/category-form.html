@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>카테고리 등록</title>
+    <link rel="stylesheet" th:href="@{/css/stock-register.css}">
+</head>
+<body>
+<div class="container">
+    <h1 class="page-title">📝 카테고리 등록/수정</h1>
+
+    <form th:action="@{/admin/categories/register}" method="post">
+
+        <label>카테고리 CODE</label>
+        <input type="text" name="categoryId" th:value="${category.categoryId}" required>
+
+        <label>카테고리 명</label>
+        <input type="text" name="categoryName" th:value="${category.categoryName}" required>
+
+        <button type="submit" class="button">저장</button>
+    </form>
+</div>
+</body>
+</html>

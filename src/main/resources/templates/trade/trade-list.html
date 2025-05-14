@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>내 거래 내역</title>
+  <link rel="stylesheet" th:href="@{/css/trade-list.css}">
+</head>
+<body>
+<div class="container">
+  <h1>📊 내 거래 내역</h1>
+
+  <div class="button-area">
+    <a th:href="@{/main}" class="btn-main">🏠 메인</a>
+    <a th:href="@{/stocks/all}" class="btn-stocks">📈 종목 관리</a>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>거래 ID</th>
+      <th>종목 코드</th>
+      <th>종목 이름</th>
+      <th>가격</th>
+      <th>수량</th>
+      <th>유형</th>
+      <th>거래일</th>
+      <th>카테고리</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="trade : ${trades}">
+      <td th:text="${trade.id}"></td>
+      <td th:text="${trade.stockCode}"></td>
+      <td th:text="${trade.stockName}"></td>
+      <td th:text="${trade.price}"></td>
+      <td th:text="${trade.quantity}"></td>
+      <td th:text="${trade.tradeType}"></td>
+      <td th:text="${#dates.format(trade.tradedAt, 'yyyy-MM-dd HH:mm')}"></td>
+      <td th:text="${trade.category?.name}">-</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

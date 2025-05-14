@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>카테고리 목록</title>
+    <link rel="stylesheet" th:href="@{/css/stock-register.css}">
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1 class="page-title">📋 카테고리 목록</h1>
+        <a href="/admin/categories/form" class="button">카테고리 등록</a>
+    </div>
+
+    <table class="data-table">
+        <thead>
+        <tr>
+            <th>카테고리 ID</th>
+            <th>이름</th>
+            <th>수정/삭제</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="cat : ${categories}">
+            <td th:text="${cat.categoryId}"></td>
+            <td th:text="${cat.categoryName}"></td>
+            <td>
+                <a th:href="@{/admin/categories/form(id=${cat.categoryId})}" class="button">수정</a>
+                <form th:action="@{/admin/categories/delete}" method="post" style="display:inline;">
+                    <input type="hidden" name="id" th:value="${cat.categoryId}">
+                    <button type="submit" class="button" onclick="return confirm('삭제할까요?')">삭제</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

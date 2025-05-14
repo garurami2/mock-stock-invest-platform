@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>📈 실시간 거래 센터</title>
+  <link rel="stylesheet" th:href="@{/css/trad-center.css}">
+</head>
+<body>
+<div class="container">
+  <h1>📊 실시간 거래 센터</h1>
+
+  <div class="grid-layout">
+    <!-- 왼쪽: 종목 리스트 -->
+    <div class="stock-list">
+      <h2>📋 종목 목록</h2>
+      <table id="stockTable">
+        <thead>
+        <tr>
+          <th>종목 코드</th>
+          <th>종목 이름</th>
+          <th>카테고리</th>
+          <th>현재가</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- JS로 데이터 채움 -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 오른쪽: 보유 종목 및 매수/매도 등록 -->
+    <div class="trade-panel">
+      <h2>💼 거래 패널</h2>
+
+      <div id="holdingDisplay">보유 수량: -</div>
+      <div id="totalPriceDisplay">총 거래 금액: - 원</div>
+
+      <form id="tradeForm">
+        <label for="stockCode">종목 코드</label>
+        <input type="text" id="stockCode" name="stockCode" required readonly>
+
+        <label for="stockName">종목 이름</label>
+        <input type="text" id="stockName" name="stockName" required readonly>
+
+        <label for="category">카테고리</label>
+        <select id="category" name="category" required>
+          <option value="">카테고리 선택</option>
+          <option value="IT">IT</option>
+          <option value="금융">금융</option>
+          <option value="제조">제조</option>
+          <option value="헬스케어">헬스케어</option>
+          <option value="기타">기타</option>
+        </select>
+
+        <label for="price">가격</label>
+        <input type="number" id="price" name="price" required>
+
+        <label for="quantity">수량</label>
+        <input type="number" id="quantity" name="quantity" required>
+
+        <label for="tradeType">거래 유형</label>
+        <select id="tradeType" name="tradeType" required>
+          <option value="BUY">매수</option>
+          <option value="SELL">매도</option>
+        </select>
+
+        <button type="submit">거래 등록</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+<script>
+  // 실시간 종목 목록 조회
+  function fetchStockData() {
+    $.get("/api/stocks/all", function (stocks) {
+      const tbody = $("#stockTable tbody");
+      tbody.empty();
+
+      stocks.forEach(stock => {
+
+        const row = `
+                    <tr data-code="${stock.stockCode}" data-name="${stock.stockName}" data-price="${stock.currentPrice}">
+                        <td>${stock.stockCode}</td>
+                        <td>${stock.stockName}</td>
+                        <td>${stock["category"]?.categoryName}</td>
+                        <td>${stock.currentPrice != null ? stock.currentPrice.toLocaleString() : '-'}</td>
+                    </tr>`;
+        tbody.append(row);
+      });
+
+      $("#stockTable tbody tr").click(function () {
+        const code = $(this).data("code");
+        const name = $(this).data("name");
+        const price = $(this).data("price");
+
+        $("#stockCode").val(code);
+        $("#stockName").val(name);
+        $("#price").val(price);
+        fetchHoldingQuantity(code);
+        updateTotalPrice();
+      });
+    });
+  }
+
+  // 카테고리 목록 불러오기
+  function fetchCategory(){
+    $.get("/api/categories/all", function(categories){
+      const $categorySelect = $('#category');
+
+      console.log("!!!!");
+
+      categories.forEach(category => {
+        $categorySelect.append(
+                $('<option>', {
+                  value: category.categoryId,
+                  text: category.categoryName
+                })
+        )
+      })
+    });
+  }
+
+  // 보유 수량 조회
+  function fetchHoldingQuantity(code) {
+    $.get(`/trades/holding/${code}`, function (quantity) {
+      $("#holdingDisplay").text(`보유 수량: ${quantity.toLocaleString()} 주`);
+      $("#holdingDisplay").data("quantity", quantity);
+    });
+  }
+
+  // 총 거래 금액 계산
+  function updateTotalPrice() {
+    const price = parseInt($("#price").val()) || 0;
+    const qty = parseInt($("#quantity").val()) || 0;
+    $("#totalPriceDisplay").text(`총 거래 금액: ${(price * qty).toLocaleString()} 원`);
+  }
+
+  // 거래 등록
+  $("#tradeForm").on("submit", function (e) {
+    e.preventDefault();
+
+    const tradeType = $("#tradeType").val();
+    const qty = parseInt($("#quantity").val());
+    const holding = $("#holdingDisplay").data("quantity") || 0;
+
+    if (tradeType === "SELL" && qty > holding) {
+      alert("보유 수량보다 많은 수량을 매도할 수 없습니다.");
+      return;
+    }
+
+    const data = {
+      stockCode: $("#stockCode").val(),
+      stockName: $("#stockName").val(),
+      price: parseInt($("#price").val()),
+      quantity: qty,
+      tradeType: tradeType
+    };
+
+    $.ajax({
+      url: "/api/trade",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+      success: function () {
+        alert("거래 등록 완료");
+        $("#tradeForm")[0].reset();
+        $("#holdingDisplay").text("보유 수량: -");
+        $("#totalPriceDisplay").text("총 거래 금액: - 원");
+        fetchHoldingQuantity(data.stockCode); // 보유 수량 업데이트
+      },
+      error: function () {
+        alert("거래 등록 실패");
+      }
+    });
+  });
+
+  $(document).ready(function () {
+    fetchStockData();
+    fetchCategory();
+    setInterval(fetchStockData, 5000);
+    $("#price, #quantity").on("input", updateTotalPrice);
+  });
+</script>
+</body>
+</html>
