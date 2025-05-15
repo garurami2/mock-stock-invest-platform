@@ -2,21 +2,28 @@ package com.ach.stock.service;
 
 import com.ach.stock.dto.Category;
 import com.ach.stock.dto.Stock;
+import com.ach.stock.dto.StockPriceHistory;
 import com.ach.stock.repository.CategoryRepository;
+import com.ach.stock.repository.StockPriceHistoryRepository;
 import com.ach.stock.repository.StockRepository;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StockService {
 
     private final StockRepository stockRepository;
+    private final StockPriceHistoryRepository historyRepository;
     private final CategoryRepository categoryRepository;
 
     // 종목 전체 조회
@@ -93,10 +100,28 @@ public class StockService {
             double changePercent = (Math.random() * 10) - 5;
             int newPrice = (int) Math.max(100, Math.round(currentPrice * (1 + changePercent / 100)));
 
+            // 주가 갱싱
             stock.setCurrentPrice(newPrice);
             stock.setLastUpdate(new Date());
 
-            stockRepository.save(stock);
+            // 이력 저장
+            StockPriceHistory history = StockPriceHistory.builder()
+                    .stock(stock)
+                    .price(newPrice)
+                    .recordedAt(LocalDateTime.now())
+                    .build();
+
+            historyRepository.save(history);
+
         }
+
+        stockRepository.saveAll(stocks);
     }
+
+    // 종목 변동 이력 조회
+    public List<StockPriceHistory> getHistoryByStock(Long stockId) {
+        return historyRepository.findByStockIdOrderByRecordedAtAsc(stockId);
+    }
+
+
 }

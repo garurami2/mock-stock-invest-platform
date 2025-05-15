@@ -3,17 +3,23 @@ package com.ach.stock.controller;
 
 import com.ach.stock.dto.Category;
 import com.ach.stock.dto.Stock;
+import com.ach.stock.dto.StockPriceHistory;
+import com.ach.stock.repository.StockPriceHistoryRepository;
 import com.ach.stock.service.CategoryService;
 import com.ach.stock.service.StockService;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
@@ -22,6 +28,8 @@ public class StockController {
     private final StockService stockService;
 
     private final CategoryService categoryService;
+
+    private final StockPriceHistoryRepository historyRepository;
 
     // 종목 목록 페이지 이동
     @GetMapping("/admin/stocks/all")
@@ -87,5 +95,22 @@ public class StockController {
                 "quantity", quantity,
                 "profitOrLoss", result
         ));
+    }
+
+    // 특정 종목 history 조회
+    @GetMapping("/api/{stockId}/history")
+    @ResponseBody
+    public List<HistoryResponse> getStockPriceHistory(@PathVariable Long stockId) {
+        List<StockPriceHistory> histories = historyRepository.findByStockIdOrderByRecordedAtAsc(stockId);
+        return histories.stream()
+                .map(h -> new HistoryResponse(h.getRecordedAt(), h.getPrice()))
+                .collect(Collectors.toList());
+    }
+
+    @Getter
+    @AllArgsConstructor
+    static class HistoryResponse{
+        private LocalDateTime time;
+        private int price;
     }
 }
