@@ -7,6 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping
@@ -15,7 +17,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     // 카테고리 모두 조회
-    @GetMapping("/api/categories/all")
+    @GetMapping("/categories/all")
     public String categoryList(Model model) {
         model.addAttribute("categories", categoryService.findAll());
         return "admin/category/category-list";
