@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Price History Chart</title>
+  <script th:src="@{/js/chart.js}"></script>
+  <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+  <script th:src="@{/js/chartjs-plugin-annotation.min.js}"></script>
+</head>
+<body style="max-width: 800px; margin: 50px auto; font-family: sans-serif;">
+<h2>📈 시세 히스토리(최근 7일) (Stock Name: <span id="stock-name">1</span>)</h2>
+
+<label for="stock-select">종목 선택: </label>
+<select id="stock-select"></select>
+
+<canvas id="priceChart" style="margin-top: 20px;"></canvas>
+
+<script>
+  let chart;
+
+
+  // 1. 종목 불러오기
+  fetch('/api/stocks/all')
+          .then(res => res.json())
+          .then(stocks => {
+            const $select = $("#stock-select");
+            $.each(stocks, function(i, stock) {
+              $select.append($("<option>").val(stock.id).text(stock.stockName));
+            });
+
+            // 첫 번째 종목으로 초기 로드
+            if (stocks.length > 0) {
+              $select.val(stocks[0].id);
+              loadChartData(stocks[0].id);
+            }
+
+            // 종목 선택시 이벤트 핸들러
+            $select.on("change", function() {
+              loadChartData($(this).val());
+            });
+          });
+
+  function loadChartData(stockId){
+    fetch(`/api/stock/${stockId}/history`)
+            .then(response => response.json())
+            .then(result => {
+              const stockName = result[0].stockName
+              const data = result.map(item => ({
+                time: new Date(item.recordedAt).toLocaleString('ko-KR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }),
+                price: item.price
+              }));
+
+
+              const labels = data.map(item => item.time);
+              const prices = data.map(item => item.price);
+
+              // document.getElementById("stock-name").textContent = stockName;
+              $("#stock-name").text(stockName);
+
+              if(chart){
+                // 기존 차트 업데이트
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = prices;
+                chart.update();
+              }else{
+                chart = new Chart($("#priceChart"), {
+                  type: 'line',
+                  data: {
+                    labels: labels,
+                    datasets: [{
+                      label: 'Price',
+                      data: prices,
+                      fill: false,
+                      borderColor: 'rgb(75, 192, 192)',
+                      tension: 0.1
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    plugins: {
+                      annotation: {
+                        annotations: {
+                          maxLine: {
+                            type: 'line',
+                            yMin: Math.max(...prices),
+                            yMax: Math.max(...prices),
+                            borderColor: 'red',
+                            borderWidth: 1,
+                            label: {
+                              enabled: true,
+                              content: '📈 최고가',
+                              position: 'end',
+                              backgroundColor: 'red',
+                              color: 'white'
+                            }
+                          },
+                          minLine: {
+                            type: 'line',
+                            yMin: Math.min(...prices),
+                            yMax: Math.min(...prices),
+                            borderColor: 'blue',
+                            borderWidth: 1,
+                            label: {
+                              enabled: true,
+                              content: '📉 최저가',
+                              position: 'start',
+                              backgroundColor: 'blue',
+                              color: 'white'
+                            }
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      x: {
+                        title: { display: true, text: 'Time' },
+                        ticks: { maxRotation: 90, minRotation: 45 }
+                      },
+                      y: {
+                        title: { display: true, text: 'Price (₩)' },
+                        beginAtZero: false
+                      }
+                    }
+                  },
+                  plugins: [Chart.registry.getPlugin('annotation')]
+                });
+              }
+            });
+  }
+
+</script>
+</body>
+</html>
