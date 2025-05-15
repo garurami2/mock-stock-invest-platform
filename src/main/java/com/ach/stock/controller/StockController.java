@@ -29,8 +29,6 @@ public class StockController {
 
     private final CategoryService categoryService;
 
-    private final StockPriceHistoryRepository historyRepository;
-
     // 종목 목록 페이지 이동
     @GetMapping("/admin/stocks/all")
     public String getAllStocks(Model model) {
@@ -97,20 +95,5 @@ public class StockController {
         ));
     }
 
-    // 특정 종목 history 조회
-    @GetMapping("/api/{stockId}/history")
-    @ResponseBody
-    public List<HistoryResponse> getStockPriceHistory(@PathVariable Long stockId) {
-        List<StockPriceHistory> histories = historyRepository.findByStockIdOrderByRecordedAtAsc(stockId);
-        return histories.stream()
-                .map(h -> new HistoryResponse(h.getRecordedAt(), h.getPrice()))
-                .collect(Collectors.toList());
-    }
 
-    @Getter
-    @AllArgsConstructor
-    static class HistoryResponse{
-        private LocalDateTime time;
-        private int price;
-    }
 }
