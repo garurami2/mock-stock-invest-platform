@@ -37,6 +37,7 @@ public class TradeController {
     public String getMyTrades(@SessionAttribute(name = "loginUser") Users loginUser, Model model) {
         List<Trade> myTrades = tradeService.getTradesByUser(loginUser);
         model.addAttribute("trades", myTrades);
+        model.addAttribute("userRole", loginUser.getRole().name());
         return "trade/trade-list";
     }
 

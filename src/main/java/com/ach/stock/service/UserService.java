@@ -48,7 +48,6 @@ public class UserService {
         // 사용자 보유 금액 저장
         UserWallet wallet = new UserWallet();
         wallet.setUser(user);
-        wallet.setUserId(dto.getUserId());
         wallet.setBalance(dto.getBalance());
         wallet.setUpdatedAt(LocalDateTime.now());
 

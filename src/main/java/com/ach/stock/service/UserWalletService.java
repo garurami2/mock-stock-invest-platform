@@ -31,10 +31,10 @@ public class UserWalletService {
     @Transactional
     public void updateBalance(Users loginUser, StockTrade trade) {
 
-        UserWallet userWallet = userWalletRepository.findByUserId(loginUser.getUserId())
+        UserWallet getUserWallet = userWalletRepository.findByUserId(loginUser.getUserId())
                 .orElseThrow(() -> new RuntimeException("사용자 금액 조회중 에러 발생"));
 
-        BigDecimal userBalance = userWallet.getBalance();
+        BigDecimal userBalance = getUserWallet.getBalance();
         BigDecimal tradePrice = BigDecimal.valueOf(trade.getPrice());
 
         if(userBalance.compareTo(tradePrice) < 0) { // 가지고 있는 금액이 구매하려는 금액보다 적을 경우
@@ -48,15 +48,8 @@ public class UserWalletService {
                 newBalance = userBalance.add(tradePrice);
             }
 
-            UserWallet wallet = UserWallet.builder()
-                    .userId(loginUser.getUserId())
-                    .balance(userBalance.subtract(tradePrice))
-                    .updatedAt(LocalDateTime.now())
-                    .build();
-
-            userWalletRepository.save(wallet);
+            getUserWallet.setBalance(userBalance.subtract(tradePrice));
+            getUserWallet.setUpdatedAt(LocalDateTime.now());
         }
     }
-    // 사용자의 가지고 있는 금액 변경
-
 }

@@ -38,4 +38,6 @@ public class Users {
     @Column(name = "ROLE")
     private Role role; // USER, ADMIN
 
+    @Version
+    private Integer version;
 }

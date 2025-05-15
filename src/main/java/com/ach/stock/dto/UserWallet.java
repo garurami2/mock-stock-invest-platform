@@ -36,4 +36,7 @@ public class UserWallet {
     public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    @Version
+    private Integer version;
 }

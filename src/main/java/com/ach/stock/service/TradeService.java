@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -53,4 +54,5 @@ public class TradeService {
         Integer result = tradeRepository.getUserStockQuantity(loginUser, stockCode);
         return result != null ? result : 0;
     }
+
 }

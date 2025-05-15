@@ -11,7 +11,7 @@
 
   <div class="button-area">
     <a th:href="@{/main}" class="btn-main">🏠 메인</a>
-    <a th:href="@{/stocks/all}" class="btn-stocks">📈 종목 관리</a>
+    <a th:if="${userRole == 'ADMIN'}" th:href="@{/stocks/all}" class="btn-stocks">📈 종목 관리</a>
   </div>
 
   <table>
@@ -36,7 +36,7 @@
       <td th:text="${trade.quantity}"></td>
       <td th:text="${trade.tradeType}"></td>
       <td th:text="${#dates.format(trade.tradedAt, 'yyyy-MM-dd HH:mm')}"></td>
-      <td th:text="${trade.category?.name}">-</td>
+      <td th:text="${trade.category?.categoryName}">-</td>
     </tr>
     </tbody>
   </table>

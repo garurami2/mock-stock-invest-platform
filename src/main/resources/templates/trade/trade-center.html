@@ -49,8 +49,9 @@
         <input type="text" id="category" name="categoryName" required readonly>
         <input type="hidden" id="categoryId" name="categoryId">
 
-        <label for="price">가격</label>
-        <input type="number" id="price" name="price" required readonly>
+        <label for="displayPrice">가격</label>
+        <input type="text" id="displayPrice" name="displayPrice" required readonly>
+        <input type="hidden" id="price" name="price">
 
         <label for="quantity">수량</label>
         <input type="number" id="quantity" name="quantity" required>
@@ -98,6 +99,7 @@
         $("#stockCode").val(code);
         $("#stockName").val(name);
         $("#price").val(price);
+        $("#displayPrice").val(price.toLocaleString()); // 표시용
         $("#category").val(categoryName);
         $("#categoryId").val(categoryId);
         fetchHoldingQuantity(code);
