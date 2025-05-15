@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>📈 사용자 거래 리포트</title>
+    <link rel="stylesheet" th:href="@{/css/stock-list.css}">
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <script>
+        $(document).ready(function () {
+            $(".sortable").each(function (columnIndex) {
+                $(this).css("cursor", "pointer").click(function () {
+                    let table = $(this).closest("table");
+                    let rows = table.find("tbody > tr").toArray();
+                    let isAsc = $(this).data("asc") || false;
+
+                    rows.sort(function (a, b) {
+                        let A = $(a).children("td").eq(columnIndex).text().trim();
+                        let B = $(b).children("td").eq(columnIndex).text().trim();
+
+                        if ($.isNumeric(A) && $.isNumeric(B)) {
+                            A = parseFloat(A);
+                            B = parseFloat(B);
+                        }
+
+                        return isAsc ? (A > B ? -1 : A < B ? 1 : 0) : (A < B ? -1 : A > B ? 1 : 0);
+                    });
+
+                    $.each(rows, function (i, row) {
+                        table.children("tbody").append(row);
+                    });
+
+                    $(".sortable .sort-icon").text("");
+                    $(this).find(".sort-icon").text(isAsc ? "▼" : "▲");
+                    $(this).data("asc", !isAsc);
+                });
+            });
+        });
+
+        function getUserTradeSummary(){
+            $.get()
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>📊 사용자 종목별 거래 리포트</h1>
+
+    <div class="button-area">
+        <a th:href="@{/main}" class="btn-main">🏠 메인 페이지</a>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th class="sortable">종목 코드<span class="sort-icon"></span></th>
+            <th class="sortable">종목 이름<span class="sort-icon"></span></th>
+            <th class="sortable">총 보유 수량<span class="sort-icon"></span></th>
+            <th class="sortable">순 거래 금액 (원)<span class="sort-icon"></span></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="summary : ${tradeSummaries}">
+            <td th:text="${summary.stockCode}"></td>
+            <td th:text="${summary.stockName}"></td>
+            <td th:text="${summary.totalQuantity}"></td>
+            <td th:text="${#numbers.formatInteger(summary.netAmount, 3, 'COMMA')}"></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="3" style="text-align: right;"><strong>총 합계:</strong></td>
+            <td th:text="${totalTradeSummary != null ? #numbers.formatInteger(totalTradeSummary, 3, 'COMMA') + ' 원' : '0 원'}"></td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
+</body>
+</html>

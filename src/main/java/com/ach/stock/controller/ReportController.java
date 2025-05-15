@@ -5,27 +5,35 @@ import com.ach.stock.dto.StockSummary;
 import com.ach.stock.dto.Users;
 import com.ach.stock.service.ReportService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttribute;
 
 import java.util.List;
+import java.util.Objects;
 
-@RestController
+@Controller
 @RequiredArgsConstructor
 public class ReportController {
 
     private final ReportService reportService;
 
-    @GetMapping("/api/summary")
-    public ResponseEntity<Report> getSummary(@SessionAttribute("loginUser") Users loginUser) {
-        return ResponseEntity.ok(reportService.getSummaryReport(loginUser));
+    @GetMapping("/report/summary")
+    public String summaryPage(@SessionAttribute(name = "loginUser") Users loginUser, Model model) {
+
+        List<Report> tradeSummary = reportService.userTradeSummary(loginUser);
+        Integer totalTradeSummary = reportService.userTotalTradeSummary(loginUser);
+
+        model.addAttribute("tradeSummaries", tradeSummary);
+        model.addAttribute("totalTradeSummary", totalTradeSummary);
+
+        return "report/summary-list";
     }
 
-    @GetMapping("/api/by-stock")
-    public ResponseEntity<List<StockSummary>> getByStock(@SessionAttribute("loginUser") Users loginUser) {
-        return ResponseEntity.ok(reportService.getStockSummaries(loginUser));
+    @GetMapping("/api/summary")
+    public List<Report> getSummary(@SessionAttribute("loginUser") Users loginUser) {
+        return reportService.userTradeSummary(loginUser);
     }
 
 }
