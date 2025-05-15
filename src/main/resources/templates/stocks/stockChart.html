@@ -6,6 +6,8 @@
   <script th:src="@{/js/chart.js}"></script>
   <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
   <script th:src="@{/js/chartjs-plugin-annotation.min.js}"></script>
+  <script th:src="@{/js/chartjs-adapter-date-fns.js}"></script>
+  <script th:src="@{/js/chartjs-plugin-zoom.min.2.0.js}"></script>
 </head>
 <body style="max-width: 800px; margin: 50px auto; font-family: sans-serif;">
 <h2>📈 시세 히스토리(최근 7일) (Stock Name: <span id="stock-name">1</span>)</h2>
@@ -17,7 +19,6 @@
 
 <script>
   let chart;
-
 
   // 1. 종목 불러오기
   fetch('/api/stocks/all')
@@ -46,39 +47,55 @@
             .then(result => {
               const stockName = result[0].stockName
               const data = result.map(item => ({
-                time: new Date(item.recordedAt).toLocaleString('ko-KR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }),
-                price: item.price
+                x: item.recordedAt,
+                y: item.price
               }));
 
+              const pricesOnly = data.map(d => d.y);
+              const maxPrice = Math.max(...pricesOnly);
+              const minPrice = Math.min(...pricesOnly);
 
-              const labels = data.map(item => item.time);
-              const prices = data.map(item => item.price);
+              // const labels = data.map(item => item.time);
+              // const prices = data.map(item => item.price);
 
               // document.getElementById("stock-name").textContent = stockName;
               $("#stock-name").text(stockName);
 
+              // console.log(labels);
+
               if(chart){
                 // 기존 차트 업데이트
-                chart.data.labels = labels;
-                chart.data.datasets[0].data = prices;
+                chart.data.datasets[0].data = data;
+
+                // ✅ 최고/최저값 annotation 라인 갱신
+                chart.options.plugins.annotation.annotations.maxLine.yMin = maxPrice;
+                chart.options.plugins.annotation.annotations.maxLine.yMax = maxPrice;
+                chart.options.plugins.annotation.annotations.minLine.yMin = minPrice;
+                chart.options.plugins.annotation.annotations.minLine.yMax = minPrice;
+                chart.options.plugins.annotation.annotations.maxLine.label.content = `📈 최고가 (${maxPrice.toLocaleString()}₩)`;
+                chart.options.plugins.annotation.annotations.minLine.label.content = `📉 최저가 (${minPrice.toLocaleString()}₩)`;
+
                 chart.update();
               }else{
-                chart = new Chart($("#priceChart"), {
+                const ctx = $('#priceChart')[0].getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(75, 192, 192, 0.4)');
+                gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
+                chart = new Chart(ctx, {
                   type: 'line',
                   data: {
-                    labels: labels,
                     datasets: [{
                       label: 'Price',
-                      data: prices,
+                      data: data,
                       fill: false,
                       borderColor: 'rgb(75, 192, 192)',
-                      tension: 0.1
+                      backgroundColor: gradient,
+                      tension: 0.1,
+                      pointRadius: 0,       // 점 없애기
+                      pointHoverRadius: 0,  // 호버 점 제거
+                      hoverBackgroundColor: 'orange'
+                      // pointHitRadius: 0,    // 클릭 범위도 제거
+                      // showLine: true        // 라인만 보이도록 강제(scatter 타입일 때 유용)
                     }]
                   },
                   options: {
@@ -88,13 +105,13 @@
                         annotations: {
                           maxLine: {
                             type: 'line',
-                            yMin: Math.max(...prices),
-                            yMax: Math.max(...prices),
+                            yMin: maxPrice,
+                            yMax: maxPrice,
                             borderColor: 'red',
                             borderWidth: 1,
                             label: {
                               enabled: true,
-                              content: '📈 최고가',
+                              content: `📈 최고가 (${maxPrice.toLocaleString()}₩)`,
                               position: 'end',
                               backgroundColor: 'red',
                               color: 'white'
@@ -102,25 +119,37 @@
                           },
                           minLine: {
                             type: 'line',
-                            yMin: Math.min(...prices),
-                            yMax: Math.min(...prices),
+                            yMin: minPrice,
+                            yMax: minPrice,
                             borderColor: 'blue',
                             borderWidth: 1,
                             label: {
                               enabled: true,
-                              content: '📉 최저가',
+                              content: `📉 최저가 (${minPrice.toLocaleString()}₩)`,
                               position: 'start',
                               backgroundColor: 'blue',
                               color: 'white'
                             }
                           }
                         }
+                      },
+                      zoom: {
+                        pan: {enabled: true, mode: 'x'},
+                        zoom: { wheel: {enabled: true}, pinch: { enabled: true}, mode: 'x'}
                       }
                     },
                     scales: {
                       x: {
+                        type: 'time', // 시간 축으로 설정
+                        time: {
+                          unit: 'hour', // 1 시간 단위로 라벨 표시
+                          stepSize: 1,
+                          displayFormats: {
+                            hour: 'MM-dd HH시' // 원하는 형식으로 표시
+                          }
+                        },
                         title: { display: true, text: 'Time' },
-                        ticks: { maxRotation: 90, minRotation: 45 }
+                        ticks: { source: 'auto', autoSkip: true, maxRotation: 45, minRotation: 45 }
                       },
                       y: {
                         title: { display: true, text: 'Price (₩)' },
@@ -130,6 +159,7 @@
                   },
                   plugins: [Chart.registry.getPlugin('annotation')]
                 });
+
               }
             });
   }

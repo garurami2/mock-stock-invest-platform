@@ -3,6 +3,7 @@ package com.ach.stock.controller;
 import com.ach.stock.dto.StockChartPricePoint;
 import com.ach.stock.service.StockChartService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,11 +26,11 @@ public class StockChartController {
     // 특정 종목 history 조회
     @GetMapping("/api/stock/{stockId}/history")
     @ResponseBody
-    public List<StockChartPricePoint> getStockPriceHistory(@PathVariable Long stockId) {
+    public ResponseEntity<List<StockChartPricePoint>> getStockPriceHistory(@PathVariable Long stockId) {
 
         LocalDateTime filterDaysAgo = LocalDateTime.now().minusDays(7);
 
-        return stockChartService.getStockPriceHistory(stockId, filterDaysAgo);
+        return ResponseEntity.ok(stockChartService.getStockPriceHistory(stockId, filterDaysAgo));
 
     }
 
